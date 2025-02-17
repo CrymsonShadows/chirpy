@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -27,7 +28,10 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
+
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerRequestCount)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 
@@ -48,6 +52,51 @@ func handlerReadiness(w http.ResponseWriter, req *http.Request) {
 		log.Println("Error writing response:", err)
 		return
 	}
+}
+
+func handlerValidateChirp(w http.ResponseWriter, req *http.Request) {
+	type chirp struct {
+		Body string `json:"body"`
+	}
+	type responseVals struct {
+		Valid bool   `json:"valid,omitempty"`
+		Error string `json:"error,omitempty"`
+	}
+
+	decoder := json.NewDecoder(req.Body)
+	c := chirp{}
+	err := decoder.Decode(&c)
+	if err != nil {
+		log.Printf("Error decoding chirp %s\n", err)
+		w.WriteHeader(500)
+		w.Header().Set("Content-Type", "application/json")
+		respBody := responseVals{
+			Error: "Something went wrong",
+		}
+		data, _ := json.Marshal(respBody)
+		w.Write(data)
+		return
+	}
+
+	if len(c.Body) > 140 {
+		log.Printf("Chirp too long\n")
+		w.WriteHeader(400)
+		w.Header().Set("Content-Type", "application/json")
+		respBody := responseVals{
+			Error: "Chirp is too long",
+		}
+		data, _ := json.Marshal(respBody)
+		w.Write(data)
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "application/json")
+	respBody := responseVals{
+		Valid: true,
+	}
+	data, _ := json.Marshal(respBody)
+	w.Write(data)
 }
 
 func (cfg *apiConfig) handlerRequestCount(w http.ResponseWriter, req *http.Request) {
