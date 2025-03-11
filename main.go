@@ -1,10 +1,15 @@
 package main
 
 import (
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"sync/atomic"
 )
+
+type apiConfig struct {
+	fileserverHits atomic.Int32
+}
 
 func main() {
 	const filepathRoot = "."
