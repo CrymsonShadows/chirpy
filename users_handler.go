@@ -21,5 +21,16 @@ func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	dbUser, err := cfg.db.CreateUser(req.Context(), user.Email)
-	respondWithJSON(w, 201, dbUser)
+	user.CreatedAt = dbUser.CreatedAt
+	user.UpdatedAt = dbUser.UpdatedAt
+	user.Email = dbUser.Email
+	user.ID = dbUser.ID
+
+	if err != nil {
+		log.Printf("Error decoding request %s\n", err)
+		respondWithJSON(w, 500, responseVals{Error: "Something went wrong"})
+		return
+	}
+
+	respondWithJSON(w, 201, user)
 }
