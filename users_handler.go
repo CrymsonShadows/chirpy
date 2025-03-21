@@ -2,21 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
 func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
-	type responseVals struct {
-		Error string `json:"error,omitempty"`
-	}
-
 	user := User{}
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(&user)
 	if err != nil {
-		log.Printf("Error decoding request %s\n", err)
-		respondWithJSON(w, 500, responseVals{Error: "Something went wrong"})
+		respondWithError(w, 500, "Something went wrong", err)
 		return
 	}
 
@@ -27,8 +21,7 @@ func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
 	user.ID = dbUser.ID
 
 	if err != nil {
-		log.Printf("Error decoding request %s\n", err)
-		respondWithJSON(w, 500, responseVals{Error: "Something went wrong"})
+		respondWithError(w, 500, "Something went wrong", err)
 		return
 	}
 

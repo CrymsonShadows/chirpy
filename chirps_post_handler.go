@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/CrymsonShadows/chirpy/internal/database"
@@ -14,30 +13,17 @@ func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request
 		Body   string    `json:"body"`
 		UserID uuid.UUID `json:"user_id"`
 	}
-	type responseVals struct {
-		Valid       bool   `json:"valid,omitempty"`
-		Error       string `json:"error,omitempty"`
-		CleanedBody string `json:"cleaned_body,omitempty"`
-	}
 
 	decoder := json.NewDecoder(req.Body)
 	c := chirp{}
 	err := decoder.Decode(&c)
 	if err != nil {
-		log.Printf("Error decoding chirp %s\n", err)
-		respBody := responseVals{
-			Error: "Something went wrong",
-		}
-		respondWithJSON(w, 500, respBody)
+		respondWithError(w, 500, "Something went wrong", err)
 		return
 	}
 
 	if len(c.Body) > 140 {
-		log.Printf("Chirp too long\n")
-		respBody := responseVals{
-			Error: "Chirp is too long",
-		}
-		respondWithJSON(w, 400, respBody)
+		respondWithError(w, 400, "Chirp is too long", nil)
 		return
 	}
 
@@ -53,10 +39,7 @@ func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request
 		UserID: c.UserID,
 	})
 	if err != nil {
-		respBody := responseVals{
-			Error: "Something went wrong",
-		}
-		respondWithJSON(w, 500, respBody)
+		respondWithError(w, 500, "Something went wrong", err)
 		return
 	}
 	c.Body = newChirp.Body
