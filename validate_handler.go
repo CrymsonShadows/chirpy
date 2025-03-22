@@ -22,12 +22,12 @@ func handlerValidateChirp(w http.ResponseWriter, req *http.Request) {
 	c := chirp{}
 	err := decoder.Decode(&c)
 	if err != nil {
-		respondWithError(w, 500, "Something went wrong", errors.New(fmt.Sprintf("error decoding chirp: %s", err)))
+		respondWithError(w, 500, "Something went wrong", fmt.Errorf("error decoding chirp: %s", err))
 		return
 	}
 
 	if len(c.Body) > 140 {
-		respondWithError(w, 400, "Chirp is too long", errors.New("Chirp is too long"))
+		respondWithError(w, 400, "Chirp is too long", errors.New("chirp is too long"))
 		return
 	}
 

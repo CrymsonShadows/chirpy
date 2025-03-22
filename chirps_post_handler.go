@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/CrymsonShadows/chirpy/internal/database"
 	"github.com/google/uuid"
@@ -10,8 +11,11 @@ import (
 
 func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request) {
 	type chirp struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
+		ID        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body      string    `json:"body"`
+		UserID    uuid.UUID `json:"user_id"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -42,6 +46,9 @@ func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request
 		respondWithError(w, 500, "Something went wrong", err)
 		return
 	}
+	c.ID = newChirp.ID
+	c.CreatedAt = newChirp.CreatedAt
+	c.UpdatedAt = newChirp.UpdatedAt
 	c.Body = newChirp.Body
 	c.UserID = newChirp.UserID
 	respondWithJSON(w, 201, c)
