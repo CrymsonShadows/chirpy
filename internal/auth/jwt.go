@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,13 +10,14 @@ import (
 )
 
 func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
+	signingKey := []byte(tokenSecret)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "chirpy",
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
+		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
 		Subject:   userID.String(),
 	})
-	return token.SignedString([]byte(tokenSecret))
+	return token.SignedString(signingKey)
 }
 
 func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
@@ -23,17 +25,30 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 		return []byte(tokenSecret), nil
 	})
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("error parsing token: %w", err)
+		return uuid.Nil, fmt.Errorf("error parsing token: %w", err)
 	}
 
 	if !parsedToken.Valid {
-		return uuid.UUID{}, fmt.Errorf("token not valid: %w", err)
+		return uuid.Nil, fmt.Errorf("token not valid: %w", err)
 	}
 
 	idString, err := parsedToken.Claims.GetSubject()
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("error getting subject of token: %w", err)
+		return uuid.Nil, fmt.Errorf("error getting subject of token: %w", err)
 	}
 
-	return uuid.Parse(idString)
+	issuer, err := parsedToken.Claims.GetIssuer()
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if issuer != string("chirpy") {
+		return uuid.Nil, errors.New("invalid issuer")
+	}
+
+	id, err := uuid.Parse(idString)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid user id: %w", err)
+	}
+
+	return id, nil
 }
