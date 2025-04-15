@@ -2,6 +2,8 @@ package auth
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -100,6 +102,43 @@ func TestValidateJWT(t *testing.T) {
 			}
 			if gotUserID != tt.wantUserID {
 				t.Errorf("ValidateJWT() gotUserID = %v, want %v", gotUserID, tt.wantUserID)
+			}
+		})
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	validToken := "validToken"
+
+	tests := []struct {
+		name        string
+		tokenString string
+		header      http.Header
+		wantErr     bool
+	}{
+		{
+			name:        "No Authorization header",
+			tokenString: validToken,
+			header:      http.Header{},
+			wantErr:     true,
+		},
+		{
+			name:        "Authorization header has token",
+			tokenString: validToken,
+			header:      http.Header{"Authorization": []string{fmt.Sprintf("Bearer %s", validToken)}},
+			wantErr:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token, err := GetBearerToken(tt.header)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBearerToken() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (token == "") != tt.wantErr {
+				t.Errorf("GetBearerToken() returned = %s, want %s, err = %v", token, validToken, err)
 			}
 		})
 	}
