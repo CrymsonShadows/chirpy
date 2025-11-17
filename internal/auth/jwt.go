@@ -19,6 +19,9 @@ func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(expiresIn)),
 		Subject:   userID.String(),
 	})
+	issuedAt, _ := token.Claims.GetIssuedAt()
+	expiresAt, _ := token.Claims.GetExpirationTime()
+	fmt.Printf("New token issued at: %v\nExpires at: %v\n", issuedAt, expiresAt)
 	return token.SignedString(signingKey)
 }
 

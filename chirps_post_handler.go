@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CrymsonShadows/chirpy/internal/auth"
 	"github.com/CrymsonShadows/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -18,9 +19,21 @@ func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request
 		UserID    uuid.UUID `json:"user_id"`
 	}
 
+	token, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		respondWithError(w, 401, "Missing or invalid Authorization header", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(w, 401, "Invalid or expired JWT", err)
+		return
+	}
+
 	decoder := json.NewDecoder(req.Body)
 	c := chirp{}
-	err := decoder.Decode(&c)
+	err = decoder.Decode(&c)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
 		return
@@ -40,7 +53,7 @@ func (cfg *apiConfig) handlerChirpsPost(w http.ResponseWriter, req *http.Request
 
 	newChirp, err := cfg.db.CreateChirp(req.Context(), database.CreateChirpParams{
 		Body:   filteredTxt,
-		UserID: c.UserID,
+		UserID: userID,
 	})
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
