@@ -58,16 +58,19 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return id, nil
 }
 
-func GetBearerToken(headers http.Header) (string, error) {
+func GetBearerToken(headers http.Header) (token string, err error) {
 	authorizationHeader := headers.Get("Authorization")
 	if len(authorizationHeader) == 0 {
-		return "", errors.New("no authorization header found")
+		err = errors.New("no authorization header found")
+		return
 	}
 
-	tokenString, found := strings.CutPrefix(authorizationHeader, "Bearer ")
+	var found bool
+	token, found = strings.CutPrefix(authorizationHeader, "Bearer ")
 	if !found {
-		return "", errors.New("bearer prefix not found in header")
+		err = errors.New("bearer prefix not found in header")
+		return
 	}
 
-	return tokenString, nil
+	return token, nil
 }

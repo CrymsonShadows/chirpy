@@ -9,9 +9,8 @@ import (
 )
 
 type reqBody struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds *int   `json:"expires_in_seconds,omitempty"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 func (cfg *apiConfig) usersHandler(w http.ResponseWriter, req *http.Request) {
