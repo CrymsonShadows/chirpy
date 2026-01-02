@@ -30,7 +30,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
+	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong.", err)
 		return
@@ -57,7 +57,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, req *http.Request) {
 		CreatedAt:    dbUser.CreatedAt,
 		UpdatedAt:    dbUser.UpdatedAt,
 		Email:        userParams.Email,
-		Token:        token,
+		Token:        accessToken,
 		RefreshToken: refreshToken,
 	}
 

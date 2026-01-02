@@ -15,7 +15,7 @@ func (cfg *apiConfig) refreshHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	refreshToken, err := cfg.db.GetRefreshToken(req.Context(), token)
-	if err != nil || refreshToken.ExpiresAt.Before(time.Now()) {
+	if err != nil || refreshToken.RevokedAt.Valid || refreshToken.ExpiresAt.Before(time.Now()) {
 		respondWithError(w, 401, "Unauthorized", err)
 		return
 	}
