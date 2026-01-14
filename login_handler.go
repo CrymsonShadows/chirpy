@@ -57,6 +57,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, req *http.Request) {
 		CreatedAt:    dbUser.CreatedAt,
 		UpdatedAt:    dbUser.UpdatedAt,
 		Email:        userParams.Email,
+		IsChirpyRed:  dbUser.IsChirpyRed,
 		Token:        accessToken,
 		RefreshToken: refreshToken,
 	}

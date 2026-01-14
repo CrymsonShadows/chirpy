@@ -26,6 +26,7 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	Email        string    `json:"email"`
+	IsChirpyRed  bool      `json:"is_chirpy_red"`
 	Token        string    `json:"token"`
 	RefreshToken string    `json:"refresh_token"`
 }
@@ -70,6 +71,7 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.refreshHandler)
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeHandler)
 	mux.HandleFunc("PUT /api/users", apiCfg.updateUserHandler)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.updateChirpyRedHandler)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerRequestCount)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
