@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/CrymsonShadows/chirpy/internal/auth"
 	"github.com/CrymsonShadows/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -18,9 +19,14 @@ func (cfg *apiConfig) updateChirpyRedHandler(w http.ResponseWriter, req *http.Re
 		} `json:"data"`
 	}
 
+	apiKey, err := auth.GetAPIKey(req.Header)
+	if err != nil || apiKey != cfg.polkaKey {
+		respondWithError(w, 401, "Missing or invalid API key", err)
+	}
+
 	decoder := json.NewDecoder(req.Body)
 	e := event{}
-	err := decoder.Decode(&e)
+	err = decoder.Decode(&e)
 	if err != nil {
 		respondWithError(w, 500, "Something went wrong", err)
 		return
