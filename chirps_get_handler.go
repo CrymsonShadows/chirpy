@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CrymsonShadows/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -17,10 +18,27 @@ type chirp struct {
 }
 
 func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, req *http.Request) {
-	chirps, err := cfg.db.GetChirps(req.Context())
-	if err != nil {
-		respondWithError(w, 500, "Something went wrong getting chirps", err)
-		return
+	var chirps []database.Chirp
+	authorIDStr := req.URL.Query().Get("author_id")
+	if authorIDStr != "" {
+		authorID, err := uuid.Parse(authorIDStr)
+		if err != nil {
+			respondWithError(w, 500, "Something went wrong with using given query author_id", err)
+			return
+		}
+
+		chirps, err = cfg.db.GetAuthorsChirps(req.Context(), authorID)
+		if err != nil {
+			respondWithError(w, 500, "Something went wrong getting chirps", err)
+			return
+		}
+	} else {
+		var err error
+		chirps, err = cfg.db.GetChirps(req.Context())
+		if err != nil {
+			respondWithError(w, 500, "Something went wrong getting chirps", err)
+			return
+		}
 	}
 
 	var responseChirps []chirp
