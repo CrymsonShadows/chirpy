@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/CrymsonShadows/chirpy/internal/database"
@@ -20,6 +21,7 @@ type chirp struct {
 func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, req *http.Request) {
 	var chirps []database.Chirp
 	authorIDStr := req.URL.Query().Get("author_id")
+	sortType := req.URL.Query().Get("sort")
 	if authorIDStr != "" {
 		authorID, err := uuid.Parse(authorIDStr)
 		if err != nil {
@@ -39,6 +41,10 @@ func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, req *http.Request)
 			respondWithError(w, 500, "Something went wrong getting chirps", err)
 			return
 		}
+	}
+
+	if sortType == "desc" {
+		sort.Slice(chirps, func(i, j int) bool { return chirps[i].CreatedAt.After(chirps[j].CreatedAt) })
 	}
 
 	var responseChirps []chirp
